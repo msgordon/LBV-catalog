@@ -12,7 +12,7 @@ from urllib import urlretrieve
 import xml.etree.ElementTree as ET
 import atpy
 import logging
-
+import argparse
 from star import Star
 from LBV_db import LBV_DB
 import HTML
@@ -37,12 +37,7 @@ def get_priority_dict(filename):
 # Query URL.  If 'retrieve=False', build object but don't actually query
 ##############
 def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=False):
-    log = logging.getLogger(__file__+':query ')
-    if verbose:
-        log.setLevel(logging.DEBUG)
-    else:
-        log.setLevel(logging.INFO)
-    
+        
     URL[1] = star.RAs
     URL[3] = star.DECs
     URL[5] = `radius`
@@ -52,11 +47,11 @@ def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=Fa
     if retrieve:
         if overwrite == False:
             if os.access(output,os.F_OK):
-                log.debug('Skipping  '+ star.ID)
+                print'Skipping  '+ star.ID
                 return query
-        log.debug('Retrieving:  ' + query)
+        print 'Retrieving:  ' + query
         urlretrieve(query,output)
-        log.debug('Writing to:  ' + output)
+        print 'Writing to:  ' + output
  
     return query
 
@@ -64,25 +59,19 @@ def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=Fa
 #  Read in table data
 ###################
 def read_table(filename,verbose=False):
-    log = logging.getLogger(__file__+':read_table ')
-    if verbose:
-        log.setLevel(logging.DEBUG)
-    else:
-        log.setLevel(logging.INFO)
-    
     try:
-        log.debug('Reading table:  ' + filename)
+        print 'Reading table:  ' + filename
         t = atpy.Table(filename,verbose=False)
     except:
-        log.debug('No sources found in ' + filename)
+        print 'No sources found in ' + filename
         return None
 
     if verbose:
         num = len(t)
         if num == 1:
-            log.debug('Found ' + `num` + ' source in ' + filename)
+            print 'Found ' + `num` + ' source in ' + filename
         else:
-            log.debug('Found ' + `num` + ' sources in ' + filename)
+            print 'Found ' + `num` + ' sources in ' + filename
     return t
 
 
@@ -439,35 +428,17 @@ def hecto_catalog(starList, filename, priorityDict):
     
 
 def main():
-    logging.basicConfig(level=logging.INFO,format='%(message)s')
-    log = logging.getLogger(__file__+':main ')
+
+    parser = argparse.ArgumentParser(description='Find matches of input JSON catalog in WISE and 2MASS')
+
+    parser.add_argument('catalog',type=str,help='JSON catalog of sources.')
+
+    args = parser.parse_args()
     
     # Master list to hold Stars
-    theList = []
-
-    loadFromFile = 'theList.json' #None #'./old/theList.json'
-
-    if loadFromFile is None:
-        # Read datasets as dictionary, indexed by identifier
-        LBV_data = LBV_DB()
-        
-        # Find matches
-        theList = LBV_data.get_matches()
-        if len(theList) == 1:
-            log.info('\t1 source found.')
-        else:
-            log.info('\t%i sources found.' % (len(theList)))
-            
-        
-        # Save to JSON
-        saveTo = 'theList.json'
-        log.info('Saving JSON data to: %s' % (saveTo))
-        Star.save(theList, saveTo)
-        
-    else:  # Load list from file
-        log.info('Loading JSON data from: %s' % (loadFromFile))
-        theList = Star.load(loadFromFile)
-        log.info('\tLoaded %i sources.' % (len(theList)))
+    print 'Loading JSON data from: %s' % args.catalog
+    theList = Star.load(args.catalog)
+    print '\tLoaded %i sources.' % len(theList)
 
 
     ###############
@@ -481,8 +452,8 @@ def main():
         star.MASSfile = './dMASStables/%s.tbl' % (star.ID)
 
         # Query URL to find 2MASS sources
-        star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=False,verbose=False,overwrite=False)
-        star.MASStable = read_table(star.MASSfile,verbose=False)
+        star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=True,verbose=True,overwrite=True)
+        star.MASStable = read_table(star.MASSfile,verbose=True)
 
         # If found, find closest source
         if star.MASStable is not None:
@@ -490,12 +461,16 @@ def main():
             star.MASSsource = Star.gen_ID(star.MASStable['clon'],star.MASStable['clat'])
 
             # Parse xml files and pull images
-            star.MASShtml = htmlbase+star.MASStable['clon']+'+'+star.MASStable['clat']+htmlend
-            star.MASSxml = './dMASSxml/'+star.ID+'.xml'
+            #star.MASShtml = htmlbase+star.MASStable['clon']+'+'+star.MASStable['clat']+htmlend
+            #star.MASSxml = './dMASSxml/'+star.ID+'.xml'
             #query_images(star,star.MASShtml,star.MASSxml,retrieve=True,verbose=False,overwrite=False)
             #build_subpage(star,star.MASSxml,build=True)
 
 
+
+
+
+    exit()
     #################
     # WISE query
     ##################
