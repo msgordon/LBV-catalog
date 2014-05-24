@@ -448,17 +448,17 @@ def main():
     htmlbase='http://irsa.ipac.caltech.edu/cgi-bin/FinderChart/nph-finder?locstr='
     htmlend = '&markervis_orig=true&markervis_shrunk=true&mode=prog'
     
-    for star in theList:
-        star.MASSfile = './dMASStables/%s.tbl' % (star.ID)
+    #for star in theList:
+    #star.MASSfile = './dMASStables/%s.tbl' % (star.ID)
 
         # Query URL to find 2MASS sources
-        star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=True,verbose=True,overwrite=True)
-        star.MASStable = read_table(star.MASSfile,verbose=True)
+        #star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=True,verbose=True,overwrite=True)
+        #star.MASStable = read_table(star.MASSfile,verbose=True)
 
         # If found, find closest source
-        if star.MASStable is not None:
-            star.MASStable = find_closest_source(star,star.MASStable)
-            star.MASSsource = Star.gen_ID(star.MASStable['clon'],star.MASStable['clat'])
+        #if star.MASStable is not None:
+            #star.MASStable = find_closest_source(star,star.MASStable)
+            #star.MASSsource = Star.gen_ID(star.MASStable['clon'],star.MASStable['clat'])
 
             # Parse xml files and pull images
             #star.MASShtml = htmlbase+star.MASStable['clon']+'+'+star.MASStable['clat']+htmlend
@@ -467,17 +467,13 @@ def main():
             #build_subpage(star,star.MASSxml,build=True)
 
 
-
-
-
-    exit()
     #################
     # WISE query
     ##################
     for star in theList:
         star.WISEfile = './dWISEtables/' + star.ID+'.tbl'
         # Query URL to find WISE sources
-        star.WISEquery = query(URL,star,3,'wise_allsky_4band_p3as_psd',star.WISEfile,retrieve=False,verbose=False,overwrite=False)
+        star.WISEquery = query(URL,star,3,'wise_allsky_4band_p3as_psd',star.WISEfile,retrieve=True,verbose=True,overwrite=False)
         star.WISEtable = read_table(star.WISEfile)
 
         # If found, get closest source
@@ -485,6 +481,8 @@ def main():
             star.WISEtable = find_closest_source(star,star.WISEtable)
             star.WISEsource = Star.gen_ID(star.WISEtable['clon'],star.WISEtable['clat'])
 
+
+    exit()
 
     #########
     # Make HTML catalog
