@@ -436,9 +436,7 @@ def main():
     args = parser.parse_args()
     
     # Master list to hold Stars
-    print 'Loading JSON data from: %s' % args.catalog
-    theList = Star.load(args.catalog)
-    print '\tLoaded %i sources.' % len(theList)
+
 
 
     ###############
