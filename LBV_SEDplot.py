@@ -11,8 +11,8 @@ def plot_SED(tableFile):
         phot = [x for x in star.data][1:]
         plt.plot(waves,phot,'ro')
 
-        plt.xlabel(r'$\lambda [\micron]$')
-        plt.ylabel(r'$\lambda\,F_{\lambda} [erg sec^{-1} cm^{-2}]$')
+        plt.xlabel(r'$\lambda\,[\mu m]$')
+        plt.ylabel(r'$\lambda\,F_{\lambda}\,[erg\,sec^{-1}\,cm^{-2}]$')
         plt.show()
         exit()
         
