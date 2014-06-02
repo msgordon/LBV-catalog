@@ -233,6 +233,8 @@ def main():
     print 'Locating sources in %s' % args.WISE
     t = add_WISE(t,theList,args.WISE)
 
+    #t.write('photometry.tsv',format='ascii.tab')
+    #exit()
 
     outfile = 'photometry.fits'
     

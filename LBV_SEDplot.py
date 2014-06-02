@@ -10,6 +10,21 @@ h = 6.626e-27  # erg*s
 c = 3.0e10     # cm/s
 k = 1.381e-16  # erg/K
 
+def blackbody(waves, T, scale=1.0):
+    # waves in microns
+
+    # convert to cm
+    wavesCM = waves*1e-4
+
+    # flux in ergs/s/cm^2/cm/sr
+    flux = 2*h*c**2/wavesCM**5 * 1.0/(np.exp(h*c/(k*wavesCM*T)) - 1.0)
+
+    # rescale for fitting
+    flux = scale*flux
+
+    # return as intensity, ergs/s/cm^2
+    return flux * wavesCM
+
 
 bbtemp = lambda wave,T: 2*h*c**2/np.power(wave,5) * 1.0/(np.exp(h*c/(k*wave*T)) - 1.0)
 
@@ -22,9 +37,41 @@ bblog2 = lambda wave,A,B,C,D: np.log10(10.0**bblog(wave,A,B) + 10.0**bblog(wave,
 def plot_SED(tableFile):
     table = Table.read(tableFile)
 
-    waves = np.array([float(x[6:10]) for x in table.columns[1:]])[:5]
-    #print waves
-    #exit()
+    waves = np.array([float(x[6:10]) for x in table.columns[1:]])
+
+    pp = PdfPages('BB.pdf')
+    
+    for star in table:
+        phot = [x if x != 99.99 else np.NaN for x in star.data][1:]
+        if np.NaN in phot:
+            continue
+
+        try:
+            popt,pcov = curve_fit(blackbody,waves,phot,p0=[14000,phot[0]])
+        except:
+            continue
+
+        T = popt[0]
+        print 'Fitting %s, T = %.1f' % (star['ID'],T)
+        fit = blackbody(waves,*popt)
+        
+        fig = plt.figure()
+        plt.semilogx(waves,np.log10(phot),'ro')
+        plt.semilogx(waves,np.log10(fit),'b-',linewidth=2)
+        plt.ylim([-11,-15])
+        plt.xlabel(r'$\lambda\,[\mu m]$')
+        plt.ylabel(r'$log[\lambda\,F_{\lambda}]\,[erg\,sec^{-1}\,cm^{-2}]$')
+        plt.title(star['ID'])
+        plt.legend(['Photometry','BB(T = %.1f)'%T])
+
+        pp.savefig(fig)
+    pp.close()
+
+
+
+    exit()
+    
+
     wavesCM = waves*1e-4
 
     wavesDISP = np.linspace(waves[0],waves[-1],num=100)
@@ -32,16 +79,22 @@ def plot_SED(tableFile):
     
     for star in table:
         phot = [x if x != 99.99 else np.NaN for x in star.data][1:]
-        phot = phot[:5]
-        popt,pcov = curve_fit(bbtemp,wavesCM,phot,p0=14000)
+
+        print waves
+        print phot
+        exit()
+
+        popt,pcov = curve_fit(bb2,waves,phot,p0=[phot[0],0.02,phot[0],0.2])
         
         #popt,pcov = curve_fit(bbtemp,wavesCM[0:2],phot[0:2],p0=14000)
 
         print popt
-        fit = bbtemp(waves,*popt)
+        fit = bb2(waves,*popt)
         
         plt.plot(waves,np.log10(phot),'ro')
         plt.plot(waves,np.log10(fit),'b-')
+        plt.plot(waves,np.log10(bb(waves,*[popt[0],popt[1]])))
+        plt.plot(waves,np.log10(bb(waves,*[popt[2],popt[3]])))
         plt.show()
         exit()
 
