@@ -38,6 +38,7 @@ def plot_SED(tableFile):
     table = Table.read(tableFile)
 
     waves = np.array([float(x[6:10]) for x in table.columns[1:]])
+    wavesDISP = np.linspace(waves[0],waves[-1],num=1000)
 
     pp = PdfPages('BB.pdf')
     
@@ -47,19 +48,19 @@ def plot_SED(tableFile):
             continue
 
         try:
-            popt,pcov = curve_fit(blackbody,waves,phot,p0=[14000,phot[0]])
+            popt,pcov = curve_fit(blackbody,waves[0:7],phot[0:7],p0=[14000,phot[0]])
         except:
             continue
 
         T = popt[0]
         print 'Fitting %s, T = %.1f' % (star['ID'],T)
-        fit = blackbody(waves,*popt)
+        fit = blackbody(wavesDISP,*popt)
         
         fig = plt.figure()
-        plt.semilogx(waves,np.log10(phot),'ro')
-        plt.semilogx(waves,np.log10(fit),'b-',linewidth=2)
-        plt.ylim([-11,-15])
-        plt.xlabel(r'$\lambda\,[\mu m]$')
+        plt.plot(np.log10(waves),np.log10(phot),'ro')
+        plt.plot(np.log10(wavesDISP),np.log10(fit),'b-',linewidth=2)
+        plt.ylim([-15,-11])
+        plt.xlabel(r'$log[\lambda]\,[\mu m]$')
         plt.ylabel(r'$log[\lambda\,F_{\lambda}]\,[erg\,sec^{-1}\,cm^{-2}]$')
         plt.title(star['ID'])
         plt.legend(['Photometry','BB(T = %.1f)'%T])
