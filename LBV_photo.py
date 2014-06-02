@@ -84,7 +84,7 @@ def add_2MASS(table, starList, directory):
 
 
     # convert to F_lambda, erg/s/cm^2/micron
-        c = [3.0e-9 * val / (wave[x.name]**2) if val is not None else None for val in x]
+        c = [3.0e-9 * val / (wave[x.name]**2) if val is not None else None for val in table['F_%s_Jy'%x.name]]
         table.add_column(Column(c,name='F_%.2f_um' % wave[x.name],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[x.name],wave[x.name])))
 
         lc = [val * wave[x.name] if val is not None else None for val in c]
@@ -135,7 +135,7 @@ def add_WISE(table, starList, directory):
 
 
     # convert to F_lambda, erg/s/cm^2/micron
-        c = [3.0e-9 * val / (wave[x.name]**2) if val is not None else None for val in x]
+        c = [3.0e-9 * val / (wave[x.name]**2) if val is not None else None for val in table['F_%s_Jy'%x.name]]
         table.add_column(Column(c,name='F_%.2f_um' % wave[x.name],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[x.name],wave[x.name])))
 
         lc = [val * wave[x.name] if val is not None else None for val in c]
@@ -197,7 +197,7 @@ def star_photometry(starList):
     # convert to F_lambda, erg/s/cm^2/micron
     wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97}  #microns
     for col in ['U','B','V','R','I']:
-        c = [3.0e-9 * val / (wave[col]**2) if val is not None else None for val in t[col]]
+        c = [3.0e-9 * val / (wave[col]**2) if val is not None else None for val in t['F_%s_Jy'%col]]
         t.add_column(Column(c,name='F_%.2f_um' % wave[col],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[col],wave[col])))
 
         lc = [val * wave[col] if val is not None else None for val in c]
@@ -226,7 +226,7 @@ def main():
     print
     print 'Getting photometry from catalogs...'
     t = star_photometry(theList)
- 
+    
     print 'Locating sources in %s' % args.MASS
     t = add_2MASS(t,theList,args.MASS)
 
@@ -262,10 +262,9 @@ def main():
     #for col in eTable.colnames:
     #    print eTable[col]
 
-    print eTable
     #print eTable
     print 'Writing table to %s' % outfile
-    #eTable.write(outfile)
+    eTable.write(outfile)
 
 
 
