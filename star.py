@@ -123,7 +123,7 @@ class Star:
     # Get photometry, return as dictionary {'V':'19.0','B_V':'0.32'} etc
     def get_photometry(self):
         # Photometric tags
-        phot = ['V','J','H','K','B_V','U_B','U','B','R','I','V_R','R_I']
+        phot = ['V','J','H','K','B_V','U_B','U','B','R','I','V_R','R_I','__3_6_','__4_5_','__8_0_']
 
         photDict = dict.fromkeys(phot,'')  # Holds phot values
         

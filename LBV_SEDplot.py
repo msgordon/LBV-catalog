@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from astropy.table import Table
+from astropy.table import Table,Column
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import argparse
@@ -55,11 +55,20 @@ def plot_SED(tableFile):
         T = popt[0]
         print 'Fitting %s, T = %.1f' % (star['ID'],T)
         fit = blackbody(wavesDISP,*popt)
+
+        '''
+        f = open('thing.txt','w')
+        for x,y in zip(np.log10(waves),np.log10(phot)):
+            f.write('%g\t%g\n'%(x,y))
+        f.close()
+
+        exit()
+        '''
         
         fig = plt.figure()
         plt.plot(np.log10(waves),np.log10(phot),'ro')
         plt.plot(np.log10(wavesDISP),np.log10(fit),'b-',linewidth=2)
-        plt.ylim([-15,-11])
+        plt.ylim([-15,-10.5])
         plt.xlabel(r'$log[\lambda]\,[\mu m]$')
         plt.ylabel(r'$log[\lambda\,F_{\lambda}]\,[erg\,sec^{-1}\,cm^{-2}]$')
         plt.title(star['ID'])

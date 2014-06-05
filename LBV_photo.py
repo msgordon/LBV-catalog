@@ -162,9 +162,12 @@ def star_photometry(starList):
     c = Column([star.ID for star in starList],name='ID')
     t.add_column(c,index=0)
 
-    
     for col in tList.colnames:
-        c = Column([float(row) if row else None for row in tList[col]],name=col)
+        if col in ['__3_6_','__4_5_','__8_0_']:
+            name = '.'.join(col.strip('_').split('_'))
+        else:
+            name = col
+        c = Column([float(row) if row else None for row in tList[col]],name=name)
         t.add_column(c)
     
     # get phot from colors
@@ -185,23 +188,24 @@ def star_photometry(starList):
 
     # Convert to flux (Jy)
     ## http://ssc.spitzer.caltech.edu/warmmission/propkit/pet/magtojy/ref.html
-    zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635}  #Jy
+    zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'8.0':63.1}  #Jy
     
 
     ## http://www.stsci.edu/hst/nicmos/documents/handbooks/current_NEW/Appendix_B.14.3.html#329940
-    for col in ['U','B','V','R','I']:
+    for col in ['U','B','V','R','I','3.6','4.5','8.0']:
         c = [np.power(10.0,-val/2.5)*zp[col] if val is not None else None for val in t[col]]
         t.add_column(Column(c,name='F_%s_Jy' % col,description='Zeropoint: %i Jy' % zp[col],unit='Jy'))
 
 
     # convert to F_lambda, erg/s/cm^2/micron
-    wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97}  #microns
-    for col in ['U','B','V','R','I']:
+    wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872}  #microns
+    for col in ['U','B','V','R','I','3.6','4.5','8.0']:
         c = [3.0e-9 * val / (wave[col]**2) if val is not None else None for val in t['F_%s_Jy'%col]]
         t.add_column(Column(c,name='F_%.2f_um' % wave[col],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[col],wave[col])))
 
         lc = [val * wave[col] if val is not None else None for val in c]
         t.add_column(Column(lc,name='lam_F_%.2f_um' % wave[col],unit='erg*s^-1*cm^-2',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[col],wave[col])))
+
 
     return t
 
@@ -232,6 +236,8 @@ def main():
 
     print 'Locating sources in %s' % args.WISE
     t = add_WISE(t,theList,args.WISE)
+    
+    print
 
     #t.write('photometry.tsv',format='ascii.tab')
     #exit()

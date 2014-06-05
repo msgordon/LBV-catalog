@@ -2,7 +2,7 @@
 import numpy as np
 from astropy.table import Table,Column
 
-
+'''
 WeisFile = "Weis.dat"
 WeisDat = np.genfromtxt(WeisFile,names=['Name','RA','DEC','U','B','V','R','I','priority'],dtype=['a10','f8','f8','f8','f8','f8','f8','f8','i4'],autostrip=True)
 Wtab = Table(WeisDat,meta={'title':'w','include':False,'num':len(WeisDat)})
@@ -31,24 +31,26 @@ MasseyLongFile = "MasseyLong.tsv"
 MasseyLongDat = np.genfromtxt(MasseyLongFile,skip_header=1,delimiter=';',names=['Gal','LGGS','n_LGGS','HAmag','HA','O3','V','B_V','U_B','Q','Type','Name','Ref','RA','DEC'],dtype=['a8','a20','a1','f8','f8','f8','f8','f8','f8','f8','a20','a20','a5','f8','f8'],autostrip=True)
 MLtab = Table(MasseyLongDat,meta={'title':'mL','include':False,'num':len(MasseyLongDat)})
 MLtab.write("MasseyLong.fits")
+'''
 
-McQuinnNV = "McQuinn_nonvariable.txt"
+McQuinnNV = "tables/McQuinn_nonvariable.txt"
 McQuinnNVDat = np.genfromtxt(McQuinnNV,names=['Gal','ID','RA','DEC'],dtype=['a20','a20','f8','f8'],usecols=(0,1,2,3),delimiter=';',autostrip=True)
 for idx,val in enumerate(McQuinnNVDat['ID']):
     McQuinnNVDat['RA'][idx] = np.float(val[1:10])
     McQuinnNVDat['DEC'][idx] = np.float(val[11:19])
 McQNVtab = Table(McQuinnNVDat,meta={'title':'mqnv','include':False,'num':len(McQuinnNVDat)})
-McQNVtab.write("McQuinn_NV.fits")
+McQNVtab.write("tables/McQuinn_NV.fits")
 
 
-McQuinnV = "McQuinn_variable.txt"
+McQuinnV = "tables/McQuinn_variable.txt"
 McQuinnVDat = np.genfromtxt(McQuinnV,names=['Gal','ID','RA','DEC'],dtype=['a20','a20','f8','f8'],usecols=(0,1,2,3),delimiter=';',autostrip=True)
 for idx,val in enumerate(McQuinnVDat['ID']):
     McQuinnVDat['RA'][idx] = np.float(val[1:10])
     McQuinnVDat['DEC'][idx] = np.float(val[11:19])
 McQVtab = Table(McQuinnVDat,meta={'title':'mqv','include':False,'num':len(McQuinnVDat)})
-McQVtab.write("McQuinn_V.fits")
+McQVtab.write("tables/McQuinn_V.fits")
 
+'''
 Drout31 = "Drout_M31_SG.tsv"
 Drout31data = np.genfromtxt(Drout31,delimiter=';',names=['recno','Name','RA','DEC','rank','V','fV','logT','flogT','logL','flogL','comment'],dtype=['i8','a20','f8','f8','i8','f8','a1','f8','a1','f8','a1','a31'],autostrip=True)
 D31tab = Table(Drout31data,meta={'title':'d31','include':True,'num':len(Drout31data)})
@@ -68,3 +70,21 @@ MasseyXLongFile = "MASSEYXLFINAL.dat"
 MasseyXLongDat = np.genfromtxt(MasseyXLongFile,skip_header=1,delimiter=';',names=['Gal','LGGS','n_LGGS','Name','V','B_V','U_B','V_R','R_I','Type','rType','RA','DEC'],dtype=['a5','a20','a1','a20','f8','f8','f8','f8','f8','a10','a5','f8','f8'],autostrip=True)
 MXLtab = Table(MasseyXLongDat,meta={'title':'mXL','include':False,'num':len(MasseyXLongDat)})
 MXLtab.write("MasseyXL.fit")
+'''
+'''
+McQuinn = 'tables/McQuinn_dl.fit'
+McQuinnDat = Table.read(McQuinn)
+RA = [np.float(x.split('+')[0][1:]) for x in McQuinnDat['SSTM3307']]
+DEC = [np.float(x.split('+')[1]) for x in McQuinnDat['SSTM3307']]
+RAc = Column(RA,name='RA',dtype=np.float)
+DECc = Column(DEC,name='DEC',dtype=np.float)
+
+McQuinnDat.add_column(RAc)
+McQuinnDat.add_column(DECc)
+McQuinnDat.meta['title'] = 'mcq'
+McQuinnDat.meta['include'] = False
+McQuinnDat.meta['num'] = len(McQuinnDat)
+
+McQuinnDat.write('tables/McQuinn.fits')
+'''
+
