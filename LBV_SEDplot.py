@@ -37,15 +37,26 @@ bblog2 = lambda wave,A,B,C,D: np.log10(10.0**bblog(wave,A,B) + 10.0**bblog(wave,
 def plot_SED(tableFile):
     table = Table.read(tableFile)
 
-    waves = np.array([float(x[6:10]) for x in table.columns[1:]])
-    wavesDISP = np.linspace(waves[0],waves[-1],num=1000)
+    wavesZ = np.array([float(x[6:10]) for x in table.columns[1:]])
+    wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
 
     pp = PdfPages('BB.pdf')
     
     for star in table:
-        phot = [x if x != 99.99 else np.NaN for x in star.data][1:]
-        if np.NaN in phot:
-            continue
+        waves = []
+        phot = []
+
+
+        for x,y in zip(np.array([float(z[6:10]) for z in star.columns.keys()[1:]]),list(star.data)[1:]):
+            if y != 99.99:
+                waves.append(x)
+                phot.append(y)
+        #phot = [x if x != 99.99 else np.NaN for x in star.data][1:]
+        waves = np.array(waves)
+        #phot = np.array(phot)
+        #wavesDISP = np.linspace(waves[0],waves[-1],num=1000)
+        #if np.NaN in phot:
+        #    continue
 
         try:
             popt,pcov = curve_fit(blackbody,waves[0:7],phot[0:7],p0=[14000,phot[0]])
