@@ -1,6 +1,29 @@
 #! /usr/bin/env python
 import numpy as np
 from astropy.table import Table,Column
+from astropy.coordinates import ICRS
+from astropy import units as u
+
+
+
+MouldFile = 'tables/m31.bigrot2'
+MouldDat = np.genfromtxt(MouldFile,names=['Num','RAd','DECd','J','H','K','__3_6_','__4_5_','__5_8','__8_0_'])
+
+MTab = Table(MouldDat,meta={'title':'jm','include':False,'num':len(MouldDat)})
+
+mRA = []
+mDEC = []
+for decimal in zip(MouldDat['RAd'],MouldDat['DECd']):
+    c = ICRS(ra=decimal[0],dec=decimal[1],unit=(u.degree,u.degree))
+    RA,DEC = c.to_string(sep='').split()
+    mRA.append(np.float(RA))
+    mDEC.append(np.float(DEC))
+cRA = Column(name='RA',data=mRA)
+cDEC = Column(name='DEC',data=mDEC)
+MTab.add_columns([cRA,cDEC])
+MTab.write('tables/Mould.fits')
+
+exit()
 
 '''
 WeisFile = "Weis.dat"

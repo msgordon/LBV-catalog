@@ -6,6 +6,10 @@ import numpy as np
 import atpy
 import os
 
+## http://ssc.spitzer.caltech.edu/warmmission/propkit/pet/magtojy/ref.html
+zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'8.0':63.1,'J':1594,'H':1024,'K':666.7,'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
+
+wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872,'J':1.235,'H':1.662,'K':2.159,'W1':3.3526,'W2':4.6028,'W3':11.5608,'W4':22.0883}  #microns
 
 
 ###################
@@ -72,11 +76,18 @@ def add_2MASS(table, starList, directory):
     kCol = Column([x['k_m'] for x in JHK],name='K',unit='mag')
 
     # Convert to Jy
-    zp = {'J':1594,'H':1024,'K':666.7} # Jy
-    wave = {'J':1.235,'H':1.662,'K':2.159}  #microns
-    
+    #zp = {'J':1594,'H':1024,'K':666.7} # Jy
+    #wave = {'J':1.235,'H':1.662,'K':2.159}  #microns
+
     print 'Appending J,H,K photometry from %s' % directory
     for x in (jCol,hCol,kCol):
+        '''
+        for idx,old in enumerate(table[x.name]):
+            if old is None:
+                table[x.name][idx] = x[idx]
+            else:
+                continue
+        '''
         table[x.name] = x
 
         c = [np.power(10.0,-val/2.5)*zp[x.name] if val is not None else None for val in x]
@@ -123,8 +134,8 @@ def add_WISE(table, starList, directory):
     w4Col = Column([x['w4mag'] for x in Wbands],name='W4',unit='mag')
 
     # Convert to Jy
-    zp = {'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
-    wave = {'W1':3.3526,'W2':4.6028,'W3':11.5608,'W4':22.0883}  #microns
+    #zp = {'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
+    #wave = {'W1':3.3526,'W2':4.6028,'W3':11.5608,'W4':22.0883}  #microns
     
     print 'Appending 3-22 um photometry from %s' % directory
     for x in (w1Col,w2Col,w3Col,w4Col):
@@ -188,7 +199,7 @@ def star_photometry(starList):
 
     # Convert to flux (Jy)
     ## http://ssc.spitzer.caltech.edu/warmmission/propkit/pet/magtojy/ref.html
-    zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'8.0':63.1}  #Jy
+    #zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'8.0':63.1}  #Jy
     
 
     ## http://www.stsci.edu/hst/nicmos/documents/handbooks/current_NEW/Appendix_B.14.3.html#329940
@@ -198,7 +209,7 @@ def star_photometry(starList):
 
 
     # convert to F_lambda, erg/s/cm^2/micron
-    wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872}  #microns
+    #wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872}  #microns
     for col in ['U','B','V','R','I','3.6','4.5','8.0']:
         c = [3.0e-9 * val / (wave[col]**2) if val is not None else None for val in t['F_%s_Jy'%col]]
         t.add_column(Column(c,name='F_%.2f_um' % wave[col],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[col],wave[col])))
