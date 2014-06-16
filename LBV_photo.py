@@ -172,6 +172,8 @@ def star_photometry(starList):
     t = Table()
     c = Column([star.ID for star in starList],name='ID')
     t.add_column(c,index=0)
+    c = Column([star.get_gal_name() for star in starList],name='Gal')
+    t.add_column(c,index=1)
 
     for col in tList.colnames:
         if col in ['__3_6_','__4_5_','__8_0_']:
@@ -261,6 +263,12 @@ def main():
     colnames = [x for x in t.colnames if 'lam' in x]
     for col in colnames:
         t[col] = [99.99 if ((x is None) or (x is 'None')) else x for x in t[col]]
+
+
+    # Output tab file for Roberta
+    t.write('photometry.tsv', format='ascii.tab')
+    exit()
+        
     newCols = []
     for col in colnames:
         c = Column([np.float(x) for x in t[col]],name=col,dtype=np.float)

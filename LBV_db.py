@@ -55,10 +55,26 @@ class LBV_DB:
 
     # Match objects on 'RA' and 'DEC'.  Return match or None.
     @staticmethod
-    def find_match(this, matchSet):
-        for that in matchSet:
-            if ((np.abs(this['RA'] - that['RA']) < 0.3) and (np.abs(this['DEC'] - that['DEC']) < 0.3)):
-                return that
+    def find_match(this, matchSet,degree=False):
+        if degree:
+            if 'RAd' not in this.colnames:
+                RAt,DECt = Star.sex2deg(this['RA'],this['DEC'])
+            else:
+                RAt = this['RAd']
+                DECt = this['DECd']
+
+            if 'RAd' not in matchSet.colnames:
+                matchcoords = [Star.sex2dec(ra,dec) for ra,dec in zip(matchSet['RA'],matchSet['DEC'])]
+                dist = [np.sqrt((RAt-ra)**2 + (DECt-dec)**2) for ra,dec in matchcoords]
+            else:
+                dist = [np.sqrt((RAt - that['RAd'])**2 + (DECt - that['DECd'])**2) for that in matchSet]
+            if min(dist) < 0.3:
+                return matchSet[np.argmin(dist)]
+
+        else:
+            for that in matchSet:
+                if ((np.abs(this['RA'] - that['RA']) < 0.3) and (np.abs(this['DEC'] - that['DEC']) < 0.3)):
+                    return that
 
         return None
 
@@ -102,7 +118,10 @@ class LBV_DB:
                         continue
                      
                     # Find match from each catalog
-                    that_star = LBV_DB.find_match(this_star,that_cat_dict)
+                    if that_cat == 'jm':
+                        that_star = LBV_DB.find_match(this_star,that_cat_dict,degree=True)
+                    else:
+                        that_star = LBV_DB.find_match(this_star,that_cat_dict)
                     if that_star is not None:
                         these_matches.append((that_cat,that_star))
                                             

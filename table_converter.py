@@ -6,6 +6,35 @@ from astropy import units as u
 
 
 
+MouldFile = 'tables/table1a'
+MouldDat = np.genfromtxt(MouldFile,dtype=['a1','a30','a20','a20','a20','a20','a20','a20','a20','a20','a20','a20','a2'],autostrip=True)
+
+#newMould = np.empty_like(MouldDat,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+
+newMould = []
+
+for idx,row in enumerate(MouldDat):
+    new = [x[0:-1] if '&' in x else x for x in row]
+    new = new[1:-1]
+    new.insert(1,new[0].split('+')[1])
+    new[0] = new[0].split('+')[0]
+    new = [float(x) for x in new]
+    #new = np.asarray(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+    newMould.append(new)
+    #MouldDat[idx] = np.asarray(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+    #new = np.core.records.fromarrays(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+    #newMould[idx] = new
+
+newMould = np.core.records.array(newMould,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+#MouldDat=np.array(MouldDat,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+
+MTab = Table(newMould,meta={'title':'jm','include':False,'num':len(newMould)})
+#print MTab['__3_6_']
+MTab.write('tables/Mould.fits')
+exit()
+
+
+'''
 MouldFile = 'tables/m31.bigrot2'
 MouldDat = np.genfromtxt(MouldFile,names=['Num','RAd','DECd','J','H','K','__3_6_','__4_5_','__5_8','__8_0_'])
 
@@ -24,7 +53,7 @@ MTab.add_columns([cRA,cDEC])
 MTab.write('tables/Mould.fits')
 
 exit()
-
+'''
 '''
 WeisFile = "Weis.dat"
 WeisDat = np.genfromtxt(WeisFile,names=['Name','RA','DEC','U','B','V','R','I','priority'],dtype=['a10','f8','f8','f8','f8','f8','f8','f8','i4'],autostrip=True)

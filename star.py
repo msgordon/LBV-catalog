@@ -448,3 +448,82 @@ class Star:
         else:
             attrib = prior
         return HTML.TableCell(prior,align="center",attribs={'sorttable_customkey':attrib})
+
+
+    def get_gal_name(self):
+        if self.get_dID()[2] == '1':
+            return 'M33'
+        else:
+            return 'M31'
+
+
+    ### THIS ONE IS THE SHIT
+    @staticmethod
+    def sex2deg(RA,DE):
+        RAt = str(np.fix(RA))
+        RAstr =[RAt[:-6],'h+',RAt[-6:-4],'m+',RAt[-4:-2],str(np.around(RA-np.fix(RA),decimals=2))[1:],'s']
+        if not RAstr[0]:
+            RAstr[0] = '00'
+        RAfin = ''.join([thing for thing in RAstr])
+
+        DEt = str(np.fix(DE))
+        DEstr =[DEt[:-6],'d+',DEt[-6:-4],'m+',DEt[-4:-2],str(np.around(DE-np.fix(DE),decimals=2))[1:],'s']
+        if not DEstr[0]:
+            DEstr[0]= '0'
+        DEfin = ''.join([thing for thing in DEstr])
+
+
+        RAh = ''
+        RAm = ''
+        RAs = ''
+        flag = 'h'
+        for x in RAfin:
+            if flag == 'h':
+                if x is not 'h':
+                    RAh += x
+                else:
+                    flag = 'm'
+                    continue
+            if flag == 'm':
+                if x is not 'm':
+                    RAm += x
+                else:
+                    flag = 's'
+                    continue
+            if flag == 's':
+                if x is not 's':
+                    RAs += x
+                    
+        RAh = float(RAh)*15.0
+        RAm = float(RAm)*0.25
+        RAs = float(RAs)/240.0
+
+        RAd = RAh+RAm+RAs
+
+        DECd = ''
+        DECm = ''
+        DECs = ''
+        flag = 'd'
+        for x in DEfin:
+            if flag == 'd':
+                if x is not 'd':
+                    DECd += x
+                else:
+                    flag = 'm'
+                    continue
+            if flag == 'm':
+                if x is not 'm':
+                    DECm += x
+                else:
+                    flag = 's'
+                    continue
+            if flag == 's':
+                if x is not 's':
+                    DECs += x
+                    
+        DECd = float(DECd)
+        DECm = float(DECm)/60.0
+        DECs = float(DECs)/3600.0
+        
+        DECd = DECd+DECm+DECs
+        return (RAd,DECd)
