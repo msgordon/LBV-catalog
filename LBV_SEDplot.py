@@ -37,9 +37,10 @@ bblog2 = lambda wave,A,B,C,D: np.log10(10.0**bblog(wave,A,B) + 10.0**bblog(wave,
 def plot_SED(tableFile):
     table = Table.read(tableFile)
 
-    wavesZ = np.array([float(x[6:10]) for x in table.columns[1:]])
+    plotCols = [x for x in table.columns if (x[0:3] == 'lam')]
+    
+    wavesZ = np.array([float(x[6:10]) for x in plotCols])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
-    print wavesZ
 
     pp = PdfPages('BB.pdf')
     
@@ -47,8 +48,7 @@ def plot_SED(tableFile):
         waves = []
         phot = []
 
-
-        for x,y in zip(np.array([float(z[6:10]) for z in star.columns.keys()[1:]]),list(star.data)[1:]):
+        for x,y in zip(np.array([float(z[6:10]) for z in plotCols]),[star[z] for z in plotCols]):
             if y != 99.99:
                 waves.append(x)
                 phot.append(y)
@@ -60,7 +60,7 @@ def plot_SED(tableFile):
         #    continue
 
         try:
-            popt,pcov = curve_fit(blackbody,waves[0:7],phot[0:7],p0=[14000,phot[0]])
+            popt,pcov = curve_fit(blackbody,waves[0:6],phot[0:6],p0=[14000,phot[0]])
         except:
             continue
 
@@ -85,7 +85,7 @@ def plot_SED(tableFile):
         plt.ylabel(r'$log[\lambda\,F_{\lambda}]\,[erg\,sec^{-1}\,cm^{-2}]$')
         plt.title(star['ID'])
         plt.legend(['Photometry','BB(T = %.1f)'%T])
-
+        
         pp.savefig(fig)
     pp.close()
 

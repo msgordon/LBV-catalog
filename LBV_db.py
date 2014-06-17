@@ -64,7 +64,7 @@ class LBV_DB:
                 DECt = this['DECd']
 
             if 'RAd' not in matchSet.colnames:
-                matchcoords = [Star.sex2dec(ra,dec) for ra,dec in zip(matchSet['RA'],matchSet['DEC'])]
+                matchcoords = [Star.sex2deg(ra,dec) for ra,dec in zip(matchSet['RA'],matchSet['DEC'])]
                 dist = [np.sqrt((RAt-ra)**2 + (DECt-dec)**2) for ra,dec in matchcoords]
             else:
                 dist = [np.sqrt((RAt - that['RAd'])**2 + (DECt - that['DECd'])**2) for that in matchSet]
@@ -118,7 +118,7 @@ class LBV_DB:
                         continue
                      
                     # Find match from each catalog
-                    if that_cat == 'jm':
+                    if that_cat in ['jm','mqnv','mqv','mcq']:
                         that_star = LBV_DB.find_match(this_star,that_cat_dict,degree=True)
                     else:
                         that_star = LBV_DB.find_match(this_star,that_cat_dict)

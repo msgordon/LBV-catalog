@@ -261,13 +261,15 @@ def main():
     for col in colnames:
         t[col] = [99.99 if ((x is None) or (x is 'None')) else x for x in t[col]]
 
-
-
     #for Roberta
     rTable = Table()
-    rTable.add_columns([t[x] for x in ['ID','Gal','U','B','V','R','I','J','H','K','3.6','4.5','5.8','8.0','F_U_Jy','F_B_Jy','F_V_Jy','F_R_Jy','F_I_Jy','F_3.6_Jy','F_4.5_Jy','F_5.8_Jy','F_8.0_Jy','lam_F_0.36_um','F_0.44_um','lam_F_0.44_um','F_0.55_um','lam_F_0.55_um','F_0.71_um','lam_F_0.71_um','F_0.97_um','lam_F_0.97_um','F_3.55_um','lam_F_3.55_um','F_4.44_um','lam_F_4.44_um','F_5.73_um','lam_F_5.73_um','F_7.87_um','lam_F_7.87_um']])
+    rTable.add_columns([t[x] for x in ['ID','Gal']])
+    for col in ['U','B','V','R','I','J','H','K','3.6','4.5','5.8','8.0','F_U_Jy','F_B_Jy','F_V_Jy','F_R_Jy','F_I_Jy','F_J_Jy','F_H_Jy','F_K_Jy','F_3.6_Jy','F_4.5_Jy','F_5.8_Jy','F_8.0_Jy','lam_F_0.36_um','F_0.44_um','lam_F_0.44_um','F_0.55_um','lam_F_0.55_um','F_0.71_um','lam_F_0.71_um','F_0.97_um','lam_F_0.97_um','F_1.24_um','lam_F_1.24_um','F_1.66_um','lam_F_1.66_um','F_2.16_um','lam_F_2.16_um','F_3.55_um','lam_F_3.55_um','F_4.44_um','lam_F_4.44_um','F_5.73_um','lam_F_5.73_um','F_7.87_um','lam_F_7.87_um']:
+        c = Column([np.float(x) if x else 99.99 for x in t[col]],name=col,dtype=np.float)
+        rTable.add_column(c)
 
     rTable.write('photometry.tsv',format='ascii.tab')
+    rTable.write('photometry.fits')
     exit()
     
         
