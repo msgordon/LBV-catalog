@@ -5,6 +5,8 @@ from star import Star
 import numpy as np
 import atpy
 import os
+from astropy.coordinates import SkyCoord,match_coordinates_sky
+import astropy.units as u
 
 ## http://ssc.spitzer.caltech.edu/warmmission/propkit/pet/magtojy/ref.html
 zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'5.8':116.6,'8.0':63.1,'J':1594,'H':1024,'K':666.7,'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
@@ -35,6 +37,23 @@ def read_table_xml(filename,verbose=False):
 ##############
 # Find closest source to 'star' in 'table'
 ##############
+def find_closest_source2(star,table,rad=3):
+    star_c = SkyCoord(ra=star.RAd*u.deg,dec=star.DECd*u.deg,frame='icrs')
+
+    table_c = []
+    for row in table:
+        table_c.append((row['ra'],row['dec']))
+    table_ra,table_dec = zip(*table_c)
+    table_c = SkyCoord(ra=table_ra*u.deg,dec=table_dec*u.deg,frame='icrs')
+
+    idx,sep2d,dist3d = match_coordinates_sky(star_c,table_c,
+                                             storekdtree=u'_kdtree_sky')
+
+    if sep2d.is_within_bounds(upper=rad*u.arcsec):
+        return table[int(idx)]
+    else:
+        return None
+
 def find_closest_source(star,table):
     minDist = np.Infinity
     Mindex = 0
@@ -63,7 +82,7 @@ def add_2MASS(table, starList, directory):
 
         # if found, find closest source
         if catTable is not None:
-            source = find_closest_source(star,catTable)
+            source = find_closest_source2(star,catTable)
             phot = {x:source[x] for x in ('j_m','h_m','k_m')}
 
         else:

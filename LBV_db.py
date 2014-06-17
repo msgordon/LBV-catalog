@@ -7,6 +7,8 @@ from star import Star
 import sys
 import argparse
 from astropy.table import Table,Column
+from astropy.coordinates import match_coordinates_sky,SkyCoord
+from astropy import units as u
 #### Requires python2.7
 
 
@@ -21,6 +23,7 @@ class LBV_DB:
     FILE_dict = dict()
     INCLUDE_dict = dict()
     DATA_dict = dict()  # Each entry will be a dictionary mapped to a set
+    COORD_dict = dict() # SkyCoords of each object
     LOOKUP_dict = dict()
     NUM_STARS = 0
     
@@ -49,17 +52,64 @@ class LBV_DB:
             self.INCLUDE_dict[title] = table.meta['INCLUDE']
             self.NUM_STARS += len(table)
 
+            # Add skycoords to each dictionary
+            for cat,cat_dict in self.DATA_dict.iteritems():
+                self.COORD_dict[cat] = SkyCoord(ra=cat_dict['RAd']*u.deg,
+                                                dec=cat_dict['DECd']*u.deg,
+                                                frame='icrs')
+        
+
+
         print
 
         # Build lookup dictionary
         print 'Building lookup dictionary from %s' % masterFile
         masterTable = Table.read(masterFile)
+        '''
+        if 'RAd' not in masterTable.colnames:
+                RAd,DECd = zip(*[Star.sex2deg(ra,dec) for ra,dec in zip(masterTable['RA'],masterTable['DEC'])])
+                c = Column(RAd,name='RAd',dtype=np.float)
+                masterTable.add_column(c)
+                c = Column(DECd,name='DECd',dtype=np.float)
+                masterTable.add_column(c)
+        '''     
         self.LOOKUP_dict = dict(zip(masterTable['LGGS'],masterTable))
+
         #for row in MasseyXLongDat:
         #    self.LOOKUP_dict[row['LGGS']] = row
         print '\t%i sources available for search' % len(self.LOOKUP_dict)
         print
 
+
+    @staticmethod
+    def find_match2(this,matchCoords,matchSet,rad=3):
+        # First, check if IDs match
+        id_star = this['ID'] if 'ID' in this.columns else this['Name']
+        ids_matchSet = matchSet['ID'] if 'ID' in matchSet.columns else matchSet['Name']
+        try:
+            idx = list(ids_matchSet).index(id_star)
+        except:
+            pass #just continue
+        else:
+            return matchSet[idx]
+            
+        
+        c = SkyCoord(ra=this['RAd']*u.deg,
+                     dec=this['DECd']*u.deg,
+                     frame='icrs')
+        #catalog = SkyCoord(ra=matchSet['RAd']*u.degree,dec=matchSet['DECd']*u.degree,frame='icrs')
+
+        idx,sep2d,dist3d = match_coordinates_sky(c,matchCoords,
+                                                 storekdtree=u'_kdtree_sky')
+
+        if sep2d.is_within_bounds(upper=rad*u.arcsec):
+            return matchSet[int(idx)]
+        else:
+            return None
+
+
+
+        
     # Match objects on 'RA' and 'DEC'.  Return match or None.
     @staticmethod
     def find_match(this, matchSet,degree=False):
@@ -125,10 +175,16 @@ class LBV_DB:
                         continue
                      
                     # Find match from each catalog
-                    if that_cat in ['jm','mqnv','mqv','mcq']:
-                        that_star = LBV_DB.find_match(this_star,that_cat_dict,degree=True)
-                    else:
-                        that_star = LBV_DB.find_match(this_star,that_cat_dict)
+                    ###########################
+                    
+                    that_star = LBV_DB.find_match2(this_star,
+                                                   self.COORD_dict[that_cat],
+                                                   that_cat_dict)
+                    #if that_cat in ['jm','mqnv','mqv','mcq']:
+                    #    that_star = LBV_DB.find_match(this_star,that_cat_dict,degree=True)
+                    #else:
+                    #    that_star = LBV_DB.find_match(this_star,that_cat_dict)
+                    #that_star = LBV_DB.find_match(this_star,that_cat_dict)
                     if that_star is not None:
                         these_matches.append((that_cat,that_star))
                                             

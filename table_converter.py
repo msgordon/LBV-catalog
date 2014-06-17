@@ -8,24 +8,19 @@ from astropy import units as u
 
 MouldFile = 'tables/table1a'
 MouldDat = np.genfromtxt(MouldFile,dtype=['a1','a30','a20','a20','a20','a20','a20','a20','a20','a20','a20','a20','a2'],autostrip=True)
-
-#newMould = np.empty_like(MouldDat,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
-
 newMould = []
-
 for idx,row in enumerate(MouldDat):
     new = [x[0:-1] if '&' in x else x for x in row]
     new = new[1:-1]
     new.insert(1,new[0].split('+')[1])
     new[0] = new[0].split('+')[0]
-    new = [float(x) for x in new]
-    #new = np.asarray(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+    new.insert(0,''.join(['J00',new[0],'+',new[1]]))
+    new[1:] = [float(x) for x in new[1:]]
+    
     newMould.append(new)
-    #MouldDat[idx] = np.asarray(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
-    #new = np.core.records.fromarrays(new,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
-    #newMould[idx] = new
 
-newMould = np.core.records.array(newMould,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
+
+newMould = np.core.records.array(newMould,dtype=[('ID','S19'),('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
 #MouldDat=np.array(MouldDat,dtype=[('RA',float),('DEC',float),('RAd',float),('DECd',float),('__3_6_',float),('e36',int),('__4_5_',float),('e45',int),('__5_8_',float),('e58',int),('__8_0_',float),('e80',int)])
 
 MTab = Table(newMould,meta={'title':'jm','include':False,'num':len(newMould)})

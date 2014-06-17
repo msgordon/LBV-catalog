@@ -5,6 +5,8 @@ import collections
 from collections import OrderedDict as dict
 from copy import deepcopy
 import HTML
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 #### Requires python2.7
 
 #################
@@ -459,20 +461,24 @@ class Star:
 
     ### THIS ONE IS THE SHIT
     @staticmethod
-    def sex2deg(RA,DE):
+    def sex2deg(RA,DE,frame='icrs'):
         RAt = str(np.fix(RA))
-        RAstr =[RAt[:-6],'h+',RAt[-6:-4],'m+',RAt[-4:-2],str(np.around(RA-np.fix(RA),decimals=2))[1:],'s']
+        RAstr =[RAt[:-6],'h ',RAt[-6:-4],'m ',RAt[-4:-2],str(np.around(RA-np.fix(RA),decimals=2))[1:],'s']
         if not RAstr[0]:
             RAstr[0] = '00'
         RAfin = ''.join([thing for thing in RAstr])
 
         DEt = str(np.fix(DE))
-        DEstr =[DEt[:-6],'d+',DEt[-6:-4],'m+',DEt[-4:-2],str(np.around(DE-np.fix(DE),decimals=2))[1:],'s']
+        DEstr =[DEt[:-6],'d ',DEt[-6:-4],'m ',DEt[-4:-2],str(np.around(DE-np.fix(DE),decimals=2))[1:],'s']
         if not DEstr[0]:
             DEstr[0]= '0'
         DEfin = ''.join([thing for thing in DEstr])
 
+        
+        deg = SkyCoord(' '.join([RAfin,DEfin]),frame=frame)
+        return (deg.ra.value,deg.dec.value)
 
+        '''
         RAh = ''
         RAm = ''
         RAs = ''
@@ -527,3 +533,4 @@ class Star:
         
         DECd = DECd+DECm+DECs
         return (RAd,DECd)
+        '''
