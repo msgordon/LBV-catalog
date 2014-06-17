@@ -42,9 +42,11 @@ def plot_SED(tableFile):
     wavesZ = np.array([float(x[6:10]) for x in plotCols])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
 
-    pp = PdfPages('BB.pdf')
+    pp = PdfPages('BB_M31.pdf')
     
     for star in table:
+        if star['Gal'] == 'M33':
+            continue
         waves = []
         phot = []
 
