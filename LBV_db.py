@@ -6,7 +6,7 @@ from collections import OrderedDict as dict
 from star import Star
 import sys
 import argparse
-from astropy.table import Table
+from astropy.table import Table,Column
 #### Requires python2.7
 
 
@@ -36,6 +36,13 @@ class LBV_DB:
             table = Table.read(filename)
             title = table.meta['TITLE']
 
+            if 'RAd' not in table.colnames:
+                RAd,DECd = zip(*[Star.sex2deg(ra,dec) for ra,dec in zip(table['RA'],table['DEC'])])
+                c = Column(RAd,name='RAd',dtype=np.float)
+                table.add_column(c)
+                c = Column(DECd,name='DECd',dtype=np.float)
+                table.add_column(c)
+            
             self.masterFile = masterFile
             self.DATA_dict[title] = table
             self.FILE_dict[title] = filename
