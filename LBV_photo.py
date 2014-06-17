@@ -7,9 +7,9 @@ import atpy
 import os
 
 ## http://ssc.spitzer.caltech.edu/warmmission/propkit/pet/magtojy/ref.html
-zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'8.0':63.1,'J':1594,'H':1024,'K':666.7,'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
+zp = {'U':1823,'B':4130,'V':3781,'R':2941,'I':2635,'3.6':277.5,'4.5':179.5,'5.8':116.6,'8.0':63.1,'J':1594,'H':1024,'K':666.7,'W1':309.540,'W2':171.787,'W3':31.674,'W4':8.363}  #Jy
 
-wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872,'J':1.235,'H':1.662,'K':2.159,'W1':3.3526,'W2':4.6028,'W3':11.5608,'W4':22.0883}  #microns
+wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'5.8':5.731,'8.0':7.872,'J':1.235,'H':1.662,'K':2.159,'W1':3.3526,'W2':4.6028,'W3':11.5608,'W4':22.0883}  #microns
 
 
 ###################
@@ -176,7 +176,7 @@ def star_photometry(starList):
     t.add_column(c,index=1)
 
     for col in tList.colnames:
-        if col in ['__3_6_','__4_5_','__8_0_']:
+        if col in ['__3_6_','__4_5_','__5_8_','__8_0_']:
             name = '.'.join(col.strip('_').split('_'))
         else:
             name = col
@@ -205,14 +205,14 @@ def star_photometry(starList):
     
 
     ## http://www.stsci.edu/hst/nicmos/documents/handbooks/current_NEW/Appendix_B.14.3.html#329940
-    for col in ['U','B','V','R','I','3.6','4.5','8.0']:
+    for col in ['U','B','V','R','I','3.6','4.5','5.8','8.0']:
         c = [np.power(10.0,-val/2.5)*zp[col] if val is not None else None for val in t[col]]
         t.add_column(Column(c,name='F_%s_Jy' % col,description='Zeropoint: %i Jy' % zp[col],unit='Jy'))
 
 
     # convert to F_lambda, erg/s/cm^2/micron
     #wave = {'U':0.36,'B':0.44,'V':0.55,'R':0.71,'I':0.97,'3.6':3.55,'4.5':4.439,'8.0':7.872}  #microns
-    for col in ['U','B','V','R','I','3.6','4.5','8.0']:
+    for col in ['U','B','V','R','I','3.6','4.5','5.8','8.0']:
         c = [3.0e-9 * val / (wave[col]**2) if val is not None else None for val in t['F_%s_Jy'%col]]
         t.add_column(Column(c,name='F_%.2f_um' % wave[col],unit='erg*s^-1*cm^-2*micron^-1',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[col],wave[col])))
 
@@ -256,18 +256,20 @@ def main():
     #exit()
 
     outfile = 'photometry.fits'
-    
-    print
-    
 
     colnames = [x for x in t.colnames if 'lam' in x]
     for col in colnames:
         t[col] = [99.99 if ((x is None) or (x is 'None')) else x for x in t[col]]
 
 
-    # Output tab file for Roberta
-    t.write('photometry.tsv', format='ascii.tab')
+
+    #for Roberta
+    rTable = Table()
+    rTable.add_columns([t[x] for x in ['ID','Gal','U','B','V','R','I','J','H','K','3.6','4.5','5.8','8.0','F_U_Jy','F_B_Jy','F_V_Jy','F_R_Jy','F_I_Jy','F_3.6_Jy','F_4.5_Jy','F_5.8_Jy','F_8.0_Jy','lam_F_0.36_um','F_0.44_um','lam_F_0.44_um','F_0.55_um','lam_F_0.55_um','F_0.71_um','lam_F_0.71_um','F_0.97_um','lam_F_0.97_um','F_3.55_um','lam_F_3.55_um','F_4.44_um','lam_F_4.44_um','F_5.73_um','lam_F_5.73_um','F_7.87_um','lam_F_7.87_um']])
+
+    rTable.write('photometry.tsv',format='ascii.tab')
     exit()
+    
         
     newCols = []
     for col in colnames:
@@ -290,6 +292,7 @@ def main():
     #    print eTable[col]
 
     #print eTable
+    outfile = 'photometry.fits'
     print 'Writing table to %s' % outfile
     eTable.write(outfile)
 

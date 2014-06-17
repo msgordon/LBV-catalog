@@ -39,6 +39,7 @@ def plot_SED(tableFile):
 
     wavesZ = np.array([float(x[6:10]) for x in table.columns[1:]])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
+    print wavesZ
 
     pp = PdfPages('BB.pdf')
     
