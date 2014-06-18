@@ -3,9 +3,10 @@ import numpy as np
 from astropy.table import Table,Column
 from astropy.coordinates import ICRS
 from astropy import units as u
+from star import Star
 
 
-
+'''
 MouldFile = 'tables/table1a'
 MouldDat = np.genfromtxt(MouldFile,dtype=['a1','a30','a20','a20','a20','a20','a20','a20','a20','a20','a20','a20','a2'],autostrip=True)
 newMould = []
@@ -27,7 +28,7 @@ MTab = Table(newMould,meta={'title':'jm','include':False,'num':len(newMould)})
 #print MTab['__3_6_']
 MTab.write('tables/Mould.fits')
 exit()
-
+'''
 
 '''
 MouldFile = 'tables/m31.bigrot2'
@@ -79,7 +80,7 @@ MasseyLongDat = np.genfromtxt(MasseyLongFile,skip_header=1,delimiter=';',names=[
 MLtab = Table(MasseyLongDat,meta={'title':'mL','include':False,'num':len(MasseyLongDat)})
 MLtab.write("MasseyLong.fits")
 '''
-
+'''
 McQuinnNV = "tables/McQuinn_nonvariable.txt"
 McQuinnNVDat = np.genfromtxt(McQuinnNV,names=['Gal','ID','RA','DEC'],dtype=['a20','a20','f8','f8'],usecols=(0,1,2,3),delimiter=';',autostrip=True)
 for idx,val in enumerate(McQuinnNVDat['ID']):
@@ -98,10 +99,15 @@ McQVtab = Table(McQuinnVDat,meta={'title':'mqv','include':False,'num':len(McQuin
 McQVtab.write("tables/McQuinn_V.fits")
 
 '''
-Drout31 = "Drout_M31_SG.tsv"
+Drout31 = "tables/Drout_M31_SG.tsv"
 Drout31data = np.genfromtxt(Drout31,delimiter=';',names=['recno','Name','RA','DEC','rank','V','fV','logT','flogT','logL','flogL','comment'],dtype=['i8','a20','f8','f8','i8','f8','a1','f8','a1','f8','a1','a31'],autostrip=True)
+
 D31tab = Table(Drout31data,meta={'title':'d31','include':True,'num':len(Drout31data)})
-D31tab.write("Drout_M31_SG.fits")
+ra,dec = zip(*[Star.sex2deg(ra,dec) for ra,dec in zip(Drout31data['RA'],Drout31data['DEC'])])
+D31tab.add_column(Column(ra,name='RAd'))
+D31tab.add_column(Column(dec,name='DECd'))
+D31tab.write("tables/Drout_M31_SG.fits")
+exit()
 
 Drout33_r = "Drout_M33_redSG.txt"
 Drout33_r_data = np.genfromtxt(Drout33_r,delimiter=';',names=['Name','RA','DEC','rank','Teff','Lum','Var'],dtype=['a19','f8','f8','a1','f8','f8','a5'],autostrip=True)
@@ -112,7 +118,7 @@ Drout33_y = "Drout_M33_yellowSG.txt"
 Drout33_y_data = np.genfromtxt(Drout33_y,delimiter=';',names=['Name','RA','DEC','rank','Teff','Lum','Var'],dtype=['a19','f8','f8','a1','f8','f8','a5'],autostrip=True)
 D33tab_y = Table(Drout33_y_data,meta={'title':'d33_y','include':True,'num':len(Drout33_y_data)})
 D33tab_y.write("Drout_M33_yellowSG.fits")
-
+'''
 MasseyXLongFile = "MASSEYXLFINAL.dat"
 MasseyXLongDat = np.genfromtxt(MasseyXLongFile,skip_header=1,delimiter=';',names=['Gal','LGGS','n_LGGS','Name','V','B_V','U_B','V_R','R_I','Type','rType','RA','DEC'],dtype=['a5','a20','a1','a20','f8','f8','f8','f8','f8','a10','a5','f8','f8'],autostrip=True)
 MXLtab = Table(MasseyXLongDat,meta={'title':'mXL','include':False,'num':len(MasseyXLongDat)})
