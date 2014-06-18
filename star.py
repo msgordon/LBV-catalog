@@ -469,12 +469,13 @@ class Star:
         RAfin = ''.join([thing for thing in RAstr])
 
         DEt = str(np.fix(DE))
-        DEstr =[DEt[:-6],'d ',DEt[-6:-4],'m ',DEt[-4:-2],str(np.around(DE-np.fix(DE),decimals=2))[1:],'s']
+
+        DEstr =[DEt[:-6],'d ',DEt[-6:-4],'m ',DEt[-4:-2],str(np.abs(np.around(DE-np.fix(DE),decimals=2)))[1:],'s']
+
         if not DEstr[0]:
             DEstr[0]= '0'
         DEfin = ''.join([thing for thing in DEstr])
 
-        
         deg = SkyCoord(' '.join([RAfin,DEfin]),frame=frame)
         return (deg.ra.value,deg.dec.value)
 
