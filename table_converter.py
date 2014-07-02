@@ -151,6 +151,7 @@ DEC = [np.float(x.split('+')[1]) for x in McQuinnDat['SSTM3307']]
 RAc = Column(RA,name='RA',dtype=np.float)
 DECc = Column(DEC,name='DEC',dtype=np.float)
 
+McQuinnDat.rename_column('SSTM3307','Name')
 McQuinnDat.add_column(RAc)
 McQuinnDat.add_column(DECc)
 

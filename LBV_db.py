@@ -176,7 +176,6 @@ class LBV_DB:
                      
                     # Find match from each catalog
                     ###########################
-                    
                     that_star = LBV_DB.find_match2(this_star,
                                                    self.COORD_dict[that_cat],
                                                    that_cat_dict)
