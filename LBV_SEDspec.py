@@ -64,6 +64,7 @@ def main():
                 spec_dict[row['ID']] = row['filename']    
 
     plotCols = [x for x in phot_table.columns if (x[0:3] == 'lam')]
+    eCols = [x for x in phot_table.columns if (x[0:5] == 'e_lam')]
     wavesZ = np.array([float(x[6:10]) for x in plotCols])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
 
@@ -71,14 +72,19 @@ def main():
         if star['ID'] in spec_dict:
             waves = []
             phot = []
+            err = []
         else:
             continue
 
-        for x,y in zip(wavesZ,[star[z] for z in plotCols]):
+        for x,y,e in zip(wavesZ,[star[z] for z in plotCols],[star[z] for z in eCols]):
             if y != 99.99:
                 waves.append(x)
                 phot.append(y)
+                err.append(e)
+                
         waves = np.array(waves)
+        phot = np.array(phot)
+        err = np.array(err)
         try:
             popt,pcov = curve_fit(blackbody,waves[0:6],phot[0:6],p0=[14000,phot[0]])
         except:
@@ -90,7 +96,7 @@ def main():
 
         fig = plt.figure(dpi=72)
         plt.subplot(3,1,1)
-        plt.plot(np.log10(waves),np.log10(phot),'ro')
+        plt.errorbar(np.log10(waves),np.log10(phot),yerr=err/(2.303*np.log10(phot)),fmt='ro')#err/(2.303*phot)
         plt.plot(np.log10(wavesDISP),np.log10(fit),'b-',linewidth=2)
         plt.ylim([-15,-10.5])
         plt.xlabel(r'$log[\lambda]\,[\mu m]$')
