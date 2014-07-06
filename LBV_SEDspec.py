@@ -18,11 +18,12 @@ def get_spectrum(filename):
     if len(spectrum) != int(header['naxis1']):
         spectrum = spectrum[0]
           
-    lambda1 = header['crval1']
-    lambda2 = np.round(len(spectrum)*np.round(header['cdelt1'],2)+header['crval1'])
-    wave = np.arange(lambda1, lambda2, np.round(header['cdelt1'],2))
+    #lambda1 = header['crval1']
+    #lambda2 = np.round(len(spectrum)*np.round(header['cdelt1'],2)+header['crval1'])
+    #wave = np.arange(lambda1, lambda2, np.round(header['cdelt1'],2))
+    waves = np.arange(0,len(spectrum))*header['CDELT1'] + header['CRVAL1']
 
-    return (wave,spectrum)
+    return (waves,spectrum)
 
 
 def blackbody(waves, T, scale=1.0):
@@ -49,13 +50,18 @@ def main():
 
     parser.add_argument('table',type=str,help='FITS table of data')
     parser.add_argument('idlist',nargs='+',help='.list files of ID/spec matches')
+    parser.add_argument('-pdf',type=str,required=True,help='Output pdf file')
 
     args = parser.parse_args()
 
     phot_table = Table.read(args.table,format='ascii.tab')
     spec_dict = {}
+
+    pp = PdfPages(args.pdf)
+
+    
     for idfile in args.idlist:
-        data = np.genfromtxt(idfile,delimiter='\t',names = ['ID','filename'],dtype=['S100','S100'],autostrip=True)
+        data = np.genfromtxt(idfile,delimiter='\t',comments='#',names = ['ID','filename'],dtype=['S100','S100'],autostrip=True)
 
         for row in data:
             if row['ID'] in spec_dict:
@@ -94,7 +100,7 @@ def main():
         print 'Fitting %s, T = %.1f' % (star['ID'],T)
         fit = blackbody(wavesDISP,*popt)
 
-        fig = plt.figure(dpi=72)
+        fig = plt.figure(figsize=(20,10), dpi=72)
         plt.subplot(3,1,1)
         plt.errorbar(np.log10(waves),np.log10(phot),yerr=err/(2.303*np.log10(phot)),fmt='ro')#err/(2.303*phot)
         plt.plot(np.log10(wavesDISP),np.log10(fit),'b-',linewidth=2)
@@ -104,23 +110,33 @@ def main():
         plt.title(star['ID'])
         plt.legend(['Photometry','BB(T = %.1f)'%T])
 
+
+        spec_x1,spec_y1 = get_spectrum(spec_dict[star['ID']][0])
+        spec_x2,spec_y2 = get_spectrum(spec_dict[star['ID']][1])
+        if min(spec_x1) < min(spec_x2):
+            blue_x,blue_y = (spec_x1, spec_y1)
+            red_x,red_y = (spec_x2, spec_y2)
+        else:
+            blue_x,blue_y = (spec_x2, spec_y2)
+            red_x,red_y = (spec_x1, spec_y1)
+            
+        
         plt.subplot(3,1,2)
-        spec_x,spec_y = get_spectrum(spec_dict[star['ID']][0])
-        plt.plot(spec_x,spec_y,'b')
-        plt.xlim([min(spec_x),max(spec_x)])
-        plt.ylim([min(spec_y),max(spec_y)])
+        plt.plot(blue_x,blue_y,'b')
+        plt.xlim([min(blue_x),max(blue_x)])
+        plt.ylim([min(blue_y),max(blue_y)])
         plt.xlabel(r'$\lambda\,[\AA]$')
 
         plt.subplot(3,1,3)
-        spec_x,spec_y = get_spectrum(spec_dict[star['ID']][1])
-        plt.plot(spec_x,spec_y,'r')
-        plt.xlim([min(spec_x),max(spec_x)])
-        plt.ylim([min(spec_y),max(spec_y)])
+        plt.plot(red_x,red_y,'r')
+        plt.xlim([min(red_x),max(red_x)])
+        plt.ylim([min(red_y),max(red_y)])
         plt.xlabel(r'$\lambda\,[\AA]$')
         
 
-        plt.show()
-        exit()
+        #plt.show()
+        pp.savefig(fig)
+    pp.close()
         
         
 

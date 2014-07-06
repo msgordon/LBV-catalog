@@ -5,10 +5,10 @@ from astropy.table import Table
 import glob
 import os
 
-direc = 'M312013/M31B_Blue'
-outfile = 'M31B_Blue.list'
+direc = 'M312013/M31B_Red'
+outfile = 'M31B_Red.list'
 
-table = Table.read('photometry.tsv',format='ascii.tab')
+table = Table.read('photometry_corr.tsv',format='ascii.tab')
 
 RAphot = [x.split('+')[0][1:].split('.')[0] for x in table['ID']]
 

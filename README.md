@@ -14,4 +14,13 @@ python LBV_SEDplot.py photometry.fits
 python LBV_specmatch.py
    -> generates .list files of IDs
 
-python LBV_SEDspec.py photometry.tsv *.list
+
+# D 4304 is missing? in M31A_Blue
+
+##M31
+python LBV_SEDspec.py photometry_corr.tsv M31*.cal.list -pdf BB_spec_M31.pdf
+
+---> 
+stitch_spec.py --list M31A_FINAL.list --outdir M312013/M31A/
+stitch_spec.py --list M31B_FINAL.list --outdir M312013/M31B/
+
