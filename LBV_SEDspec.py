@@ -49,7 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plot and fit of SEDs of input photometry')
 
     parser.add_argument('table',type=str,help='FITS table of data')
-    parser.add_argument('idlist',nargs='+',help='.list files of ID/spec matches')
+    parser.add_argument('idlist',type=str,help='.list file of ID/spec matches')
     parser.add_argument('-pdf',type=str,required=True,help='Output pdf file')
 
     args = parser.parse_args()
@@ -59,15 +59,10 @@ def main():
 
     pp = PdfPages(args.pdf)
 
-    
-    for idfile in args.idlist:
-        data = np.genfromtxt(idfile,delimiter='\t',comments='#',names = ['ID','filename'],dtype=['S100','S100'],autostrip=True)
+    data = np.genfromtxt(args.idlist,delimiter='\t',comments='#',names = ['ID','Bfilename','Rfilename'],dtype=['S100','S100','S100'],autostrip=True)
 
-        for row in data:
-            if row['ID'] in spec_dict:
-                spec_dict[row['ID']] = [spec_dict[row['ID']],row['filename']]
-            else:
-                spec_dict[row['ID']] = row['filename']    
+    for row in data:
+        spec_dict[row['ID']] = [row['Bfilename'],row['Rfilename']]
 
     plotCols = [x for x in phot_table.columns if (x[0:3] == 'lam')]
     eCols = [x for x in phot_table.columns if (x[0:5] == 'e_lam')]
@@ -102,7 +97,8 @@ def main():
 
         fig = plt.figure(figsize=(20,10), dpi=72)
         plt.subplot(3,1,1)
-        plt.errorbar(np.log10(waves),np.log10(phot),yerr=err/(2.303*np.log10(phot)),fmt='ro')#err/(2.303*phot)
+        plt.plot(np.log10(waves),np.log10(phot),'ro')
+        #plt.errorbar(np.log10(waves),np.log10(phot),yerr=err/(2.303*np.log10(phot)),fmt='ro')#err/(2.303*phot)
         plt.plot(np.log10(wavesDISP),np.log10(fit),'b-',linewidth=2)
         plt.ylim([-15,-10.5])
         plt.xlabel(r'$log[\lambda]\,[\mu m]$')

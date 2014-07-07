@@ -6,7 +6,7 @@ table_converter.py
 python LBV_db.py tables/*.fits --master tables/MasseyXL.fit
 python LBV_query.py catalog.json
 python LBV_photo.py catalog.json -2MASS dMASStables -WISE dWISEtables
-python LBV_photo_corr.py
+#python LBV_photo_corr.py
 
 python LBV_SEDplot.py photometry.fits
 #python LBV_html.py photometry.fits -o LBV_M31_photo.html
@@ -18,7 +18,9 @@ python LBV_specmatch.py
 # D 4304 is missing? in M31A_Blue
 
 ##M31
-python LBV_SEDspec.py photometry_corr.tsv M31*.cal.list -pdf BB_spec_M31.pdf
+see readme in m312013
+python LBV_SEDspec.py photometry_corr_FINAL.tsv M31A_FINAL.list -pdf BB_spec_M31A.pdf
+python LBV_SEDspec.py photometry_corr_FINAL.tsv M31B_FINAL.list -pdf BB_spec_M31B.pdf
 
 ---> 
 stitch_spec.py --list M31A_FINAL.list --outdir M312013/M31A/
