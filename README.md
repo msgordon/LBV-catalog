@@ -1,3 +1,10 @@
+## July 7, 2014
+python photo_plot.py photometry_ZOMG.tsv -pdf allSED.pdf
+python photo_plot.py photometry_ZOMG.tsv -pdf M31A_SED.pdf --idlist M31A_IDs.list
+python photo_plot.py photometry_ZOMG.tsv -pdf M31B_SED.pdf --idlist M31B_IDs.list
+
+
+
 #in tables/
 table_converter.py
 ## write 'include' as metadata keyword to search on
