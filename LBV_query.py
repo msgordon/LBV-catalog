@@ -36,7 +36,7 @@ def get_priority_dict(filename):
 ##############
 # Query URL.  If 'retrieve=False', build object but don't actually query
 ##############
-def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=False):
+def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=False,forcefind=False):
         
     URL[1] = star.RAs
     URL[3] = star.DECs
@@ -47,11 +47,27 @@ def query(URL,star,radius,catalog,output,retrieve=True,verbose=True,overwrite=Fa
     if retrieve:
         if overwrite == False:
             if os.access(output,os.F_OK):
-                print'Skipping  '+ star.ID
+                print('Skipping  '+ star.ID)
                 return query
-        print 'Retrieving:  ' + query
-        urlretrieve(query,output)
-        print 'Writing to:  ' + output
+        if forcefind:
+            if read_table(output) == None:
+                URL[5] = `radius + 1`
+                if catalog == 'fp_psc':
+                    URL[7] = 'pt_src_6x2'
+                else:
+                    URL[7] = 'wise_allwise_p3as_psd'
+                query = ''.join([thing for thing in URL])
+                print 'Retrieving:  ' + query
+                urlretrieve(query,output)
+                print 'Writing to:  ' + output
+                return query
+                
+            else:
+                print('Skipping  '+ star.ID)
+                return query
+        else:
+            urlretrieve(query,output)
+            print 'Writing to:  ' + output
  
     return query
 
@@ -436,7 +452,9 @@ def main():
     args = parser.parse_args()
     
     # Master list to hold Stars
-
+    print('Loading JSON data from: %s' % (args.catalog))
+    theList = Star.load(args.catalog)
+    print('\tLoaded %i sources.' % (len(theList)))
 
 
     ###############
@@ -446,11 +464,11 @@ def main():
     htmlbase='http://irsa.ipac.caltech.edu/cgi-bin/FinderChart/nph-finder?locstr='
     htmlend = '&markervis_orig=true&markervis_shrunk=true&mode=prog'
     
-    #for star in theList:
-    #star.MASSfile = './dMASStables/%s.tbl' % (star.ID)
+    for star in theList:
+        star.MASSfile = './dMASStables/%s.tbl' % (star.ID)
 
         # Query URL to find 2MASS sources
-        #star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=True,verbose=True,overwrite=True)
+        star.MASSquery = query(URL,star,3,'fp_psc',star.MASSfile,retrieve=True,verbose=True,overwrite=True,forcefind=True)
         #star.MASStable = read_table(star.MASSfile,verbose=True)
 
         # If found, find closest source
@@ -471,13 +489,13 @@ def main():
     for star in theList:
         star.WISEfile = './dWISEtables/' + star.ID+'.tbl'
         # Query URL to find WISE sources
-        star.WISEquery = query(URL,star,3,'wise_allsky_4band_p3as_psd',star.WISEfile,retrieve=True,verbose=True,overwrite=False)
-        star.WISEtable = read_table(star.WISEfile)
+        star.WISEquery = query(URL,star,3,'wise_allsky_4band_p3as_psd',star.WISEfile,retrieve=True,verbose=True,overwrite=True,forcefind=True)
+        #star.WISEtable = read_table(star.WISEfile)
 
         # If found, get closest source
-        if star.WISEtable is not None:
-            star.WISEtable = find_closest_source(star,star.WISEtable)
-            star.WISEsource = Star.gen_ID(star.WISEtable['clon'],star.WISEtable['clat'])
+        #if star.WISEtable is not None:
+        #    star.WISEtable = find_closest_source(star,star.WISEtable)
+        #    star.WISEsource = Star.gen_ID(star.WISEtable['clon'],star.WISEtable['clat'])
 
 
     exit()

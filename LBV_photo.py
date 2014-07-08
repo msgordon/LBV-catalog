@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import argparse
-from astropy.table import Table,Column,Row
+from astropy.table import Table,Column,Row,vstack
 from star import Star
 import numpy as np
 import atpy
@@ -49,6 +49,7 @@ def find_closest_source2(star,table,rad=3):
     idx,sep2d,dist3d = match_coordinates_sky(star_c,table_c,
                                              storekdtree=u'_kdtree_sky')
 
+    return table[int(idx)]
     if sep2d.is_within_bounds(upper=rad*u.arcsec):
         return table[int(idx)]
     else:
@@ -73,6 +74,7 @@ def add_2MASS(table, starList, directory):
     starList.sort(key=lambda x: x['ID'])
 
     JHK = []
+    Mblank = []
     for star in starList:        
         # Get filename of source
         catfile = os.path.join(directory,star.ID+'.tbl')
@@ -82,11 +84,12 @@ def add_2MASS(table, starList, directory):
 
         # if found, find closest source
         if catTable is not None:
-            source = find_closest_source2(star,catTable)
+            source = find_closest_source2(star,catTable,rad=4)
             phot = {x:source[x] for x in ('j_m','h_m','k_m')}
 
         else:
             phot = {x:None for x in ('j_m','h_m','k_m')}
+            Mblank.append(star.ID)
 
         JHK.append(phot)
 
@@ -120,6 +123,7 @@ def add_2MASS(table, starList, directory):
         lc = [val * wave[x.name] if val is not None else None for val in c]
         table.add_column(Column(lc,name='lam_F_%.2f_um' % wave[x.name],unit='erg*s^-1*cm^-2',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[x.name],wave[x.name])))
 
+    print 'Failed to find 2MASS photometry for %i sources' % len(Mblank)
 
     return table
     
@@ -130,6 +134,7 @@ def add_WISE(table, starList, directory):
     starList.sort(key=lambda x: x['ID'])
 
     Wbands = []
+    Wblank = []
     for star in starList:        
         # Get filename of source
         catfile = os.path.join(directory,star.ID+'.tbl')
@@ -139,11 +144,16 @@ def add_WISE(table, starList, directory):
 
         # if found, find closest source
         if catTable is not None:
-            source = find_closest_source(star,catTable)
-            phot = {x:source[x] for x in ('w1mag','w2mag','w3mag','w4mag')}
+            source = find_closest_source2(star,catTable,rad=5)
+
+            try:
+                phot = {x:source[x] for x in ('w1mag','w2mag','w3mag','w4mag')}
+            except:
+                phot = {x:source[y] for x,y in zip(('w1mag','w2mag','w3mag','w4mag'),('w1mpro','w2mpro','w3mpro','w4mpro'))}
 
         else:
             phot = {x:None for x in ('w1mag','w2mag','w3mag','w4mag')}
+            Wblank.append(star.ID)
 
         Wbands.append(phot)
 
@@ -172,6 +182,8 @@ def add_WISE(table, starList, directory):
         table.add_column(Column(lc,name='lam_F_%.2f_um' % wave[x.name],unit='erg*s^-1*cm^-2',description='Zeropoint: %i Jy, Eff_wave: %f' %(zp[x.name],wave[x.name])))
 
 
+    print 'Failed to find WISE photometry for %i sources' % len(Wblank)
+        
     return table
 
             
@@ -242,6 +254,56 @@ def star_photometry(starList):
     return t
 
 
+def photo_corr(phot_table):
+    # replace broke ass values
+    # J013337.00+303637.5 -> J013337.04+303637.6
+    # J013415.38+302816.3 -> J013415.42+302816.4 
+    id1 = np.where(phot_table['ID'] == 'J013337.00+303637.5')
+    id2 = np.where(phot_table['ID'] == 'J013415.38+302816.3')
+    phot_table['ID'][id1] = 'J013337.04+303637.6'
+    phot_table['ID'][id2] = 'J013415.42+302816.4'
+
+    M31_table = Table.read('tables/MasseyXL_M31_photo_err.fit')
+    M33_table = Table.read('tables/MasseyXL_M33_photo_err.fit')
+
+    idx = [np.where(M31_table['LGGS'] == star['ID']) for star in phot_table if star['ID'] in M31_table['LGGS']]
+    rows31 = M31_table[idx]
+    idx = [np.where(M33_table['LGGS'] == star['ID']) for star in phot_table if star['ID'] in M33_table['LGGS']]
+    rows33 = M33_table[idx]
+
+    rows = vstack([rows31, rows33])
+
+    e_Vmag = Column(data=np.ndarray.flatten(rows['e_Vmag']),name='e_Vmag',dtype=np.float)#**2-rows['e_Vmag']**2))
+    e_Bmag = Column(data=np.ndarray.flatten(rows['e_B-V']),name='e_Bmag',dtype=np.float)
+    e_Umag = Column(data=np.ndarray.flatten(rows['e_U-B']),name='e_Umag',dtype=np.float)
+    e_Rmag = Column(data=np.ndarray.flatten(rows['e_V-R']),name='e_Rmag',dtype=np.float)
+    e_Imag = Column(data=np.ndarray.flatten(rows['e_R-I']),name='e_Imag',dtype=np.float)
+
+    e_Vflux = Column(data=np.log(10.)/2.5*np.ndarray.flatten(np.array([x*y for x,y in zip(phot_table['F_V_Jy'],e_Vmag)])),name='e_F_V_Jy')
+    e_Bflux = Column(data=np.log(10.)/2.5*np.ndarray.flatten(np.array([x*y for x,y in zip(phot_table['F_B_Jy'],e_Bmag)])),name='e_F_B_Jy')
+    e_Uflux = Column(data=np.log(10.)/2.5*np.ndarray.flatten(np.array([x*y for x,y in zip(phot_table['F_U_Jy'],e_Umag)])),name='e_F_U_Jy')
+    e_Rflux = Column(data=np.log(10.)/2.5*np.ndarray.flatten(np.array([x*y for x,y in zip(phot_table['F_R_Jy'],e_Rmag)])),name='e_F_R_Jy')
+    e_Iflux = Column(data=np.log(10.)/2.5*np.ndarray.flatten(np.array([x*y for x,y in zip(phot_table['F_I_Jy'],e_Imag)])),name='e_F_I_Jy')
+
+
+    e_Vlamflux = Column(data=np.ndarray.flatten(np.array([x for x in e_Vflux]))*3.0e-9/0.55**2,name='e_F_0.55_um')
+    e_Blamflux = Column(data=np.ndarray.flatten(np.array([x for x in e_Bflux]))*3.0e-9/0.44**2,name='e_F_0.44_um')
+    e_Ulamflux = Column(data=np.ndarray.flatten(np.array([x for x in e_Uflux]))*3.0e-9/0.36**2,name='e_F_0.36_um')
+    e_Rlamflux = Column(data=np.ndarray.flatten(np.array([x for x in e_Rflux]))*3.0e-9/0.71**2,name='e_F_0.71_um')
+    e_Ilamflux = Column(data=np.ndarray.flatten(np.array([x for x in e_Iflux]))*3.0e-9/0.97**2,name='e_F_0.97_um')
+
+    e_Ve = Column(data=np.ndarray.flatten(np.array([x for x in e_Vlamflux]))*0.55,name='e_lam_F_0.55_um')
+    e_Be = Column(data=np.ndarray.flatten(np.array([x for x in e_Blamflux]))*0.44,name='e_lam_F_0.44_um')
+    e_Ue = Column(data=np.ndarray.flatten(np.array([x for x in e_Ulamflux]))*0.36,name='e_lam_F_0.36_um')
+    e_Re = Column(data=np.ndarray.flatten(np.array([x for x in e_Rlamflux]))*0.71,name='e_lam_F_0.71_um')
+    e_Ie = Column(data=np.ndarray.flatten(np.array([x for x in e_Ilamflux]))*0.97,name='e_lam_F_0.97_um')
+
+
+    phot_table.add_columns([e_Umag,e_Bmag,e_Vmag,e_Rmag,e_Imag,e_Uflux,e_Bflux,e_Vflux,e_Rflux,e_Iflux,e_Ulamflux,e_Blamflux,e_Vlamflux,e_Rlamflux,e_Ilamflux,e_Ue,e_Be,e_Ve,e_Re,e_Ie])
+
+    return phot_table
+
+
 
 
 def main():
@@ -274,7 +336,7 @@ def main():
     #t.write('photometry.tsv',format='ascii.tab')
     #exit()
 
-    outfile = 'photometry.fits'
+    outfile = 'photometry_ZOMG'
 
     colnames = [x for x in t.colnames if 'lam' in x]
     for col in colnames:
@@ -297,8 +359,10 @@ def main():
         c = Column([np.float(x) if x else 99.99 for x in t[col]],name=col,dtype=np.float)
         rTable.add_column(c)
 
-    rTable.write('photometry.tsv',format='ascii.tab')
-    rTable.write('photometry.fits')
+    rTable = photo_corr(rTable)
+
+    rTable.write(outfile+'.tsv',format='ascii.tab')
+    rTable.write(outfile+'.fits')
     exit()
     
         
