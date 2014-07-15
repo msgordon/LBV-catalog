@@ -1,3 +1,20 @@
+# 07/15/14
+python photo_plot.py Drout_list_ZOMG.fits -pdf BB_M31_Drout.pdf --gal M31
+python photo_plot.py Drout_list_ZOMG.fits -pdf BB_M33_Drout.pdf --gal M33
+
+# 07/14/14
+ran Drout_list.py on Drout_list_init.tsv
+  ->Drout_list_FINAL.fits/tsv
+ran final_check.py on Drout_list_FINAL.fits to see if any remaining matches in Mould/McQuinn IRAS photometry
+   matches to 2MASS things
+
+wrote mag2flux.py
+
+# uses: http://wise2.ipac.caltech.edu/docs/release/allsky/expsup/sec4_4c.html#wappco   for aperture correction
+run final_check.py
+  ->  GENERATES Drout_list_ZOMG.tsv/fits
+
+
 ## July 7, 2014
 python photo_plot.py photometry_ZOMG.tsv -pdf allSED.pdf
 python photo_plot.py photometry_ZOMG.tsv -pdf M31A_SED.pdf --idlist M31A_IDs.list

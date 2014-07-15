@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 from scipy.optimize import curve_fit
 import pyfits
+import os
 
 h = 6.626e-27  # erg*s
 c = 3.0e10     # cm/s
@@ -51,10 +52,17 @@ def main():
     parser.add_argument('table',type=str,help='FITS table of data')
     parser.add_argument('-pdf',type=str,required=True,help='Output pdf file')
     parser.add_argument('--idlist',type=str,help='Optional list of IDs')
+    parser.add_argument('--gal',type=str,help='Specify galaxy')
 
     args = parser.parse_args()
 
-    phot_table = Table.read(args.table,format='ascii.tab')
+    if os.path.splitext(args.table)[1] == '.tsv':
+        phot_table = Table.read(args.table,format='ascii.tab')
+    elif os.path.splitext(args.table)[1] == '.fits':
+        phot_table = Table.read(args.table)
+    else:
+        exit('Table must be tab-separated or fits')
+        
     if args.idlist:
         with open(args.idlist,'r') as f:
             starList = [x.strip() for x in f.readlines()]
@@ -63,7 +71,7 @@ def main():
     pp = PdfPages(args.pdf)
 
     plotCols = [x for x in phot_table.columns if (x[0:3] == 'lam')]
-    eCols = [x for x in phot_table.columns if (x[0:5] == 'e_lam')]
+    #eCols = [x for x in phot_table.columns if (x[0:5] == 'e_lam')]
     wavesZ = np.array([float(x[6:10]) for x in plotCols])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
 
@@ -71,8 +79,15 @@ def main():
         if args.idlist:
             if star['ID'] not in starList:
                 continue
+
+        if args.gal:
+            if star['Gal'] != args.gal:
+                continue
+            
         waves = []
         phot = []
+        band = []
+        
         #err = []
         #if star['ID'] in spec_dict:
         #    waves = []
@@ -82,10 +97,11 @@ def main():
         #    continue
 
         #for x,y,e in zip(wavesZ,[star[z] for z in plotCols],[star[z] for z in eCols]):
-        for x,y in zip(wavesZ,[star[z] for z in plotCols]):
+        for x,y,z in zip(wavesZ,[star[z] for z in plotCols],['U','B','V','R','I','J','H','K','3.6','4.5','5.8','8.0','W1','W2','W3','W4']):
             if y != 99.99:
                 waves.append(x)
                 phot.append(y)
+                band.append(z)
                 #err.append(e)
                 
         waves = np.array(waves)
@@ -112,7 +128,7 @@ def main():
         plt.title('%s:  %s' %(star['Gal'],star['ID']))
         plt.legend(['Photometry','BB(T = %.1f)'%T])
 
-
+        map(plt.text,np.log10(waves),[-14 if x not in ['3.8','4.5'] else -14.2 for x in band],band)
         
 
         #plt.show()

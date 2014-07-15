@@ -42,7 +42,7 @@ def plot_SED(tableFile):
     wavesZ = np.array([float(x[6:10]) for x in plotCols])
     wavesDISP = np.linspace(wavesZ[0],wavesZ[-1],num=1000)
 
-    pp = PdfPages('BB_M31.pdf')
+    pp = PdfPages('BB_M31_Drout.pdf')
     
     for star in table:
         if star['Gal'] == 'M33':
@@ -62,7 +62,7 @@ def plot_SED(tableFile):
         #    continue
 
         try:
-            popt,pcov = curve_fit(blackbody,waves[0:6],phot[0:6],p0=[14000,phot[0]])
+            popt,pcov = curve_fit(blackbody,waves[0:5],phot[0:5],p0=[14000,phot[0]])
         except:
             continue
 
